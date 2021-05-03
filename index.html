@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Maps</title>
+	<style>
+		body,
+		html,
+		#gmap {
+			height: 90%;
+			margin: 0;
+		}
+		#gmap .marker {
+			position: absolute;
+			background: url(https://icon-library.net/images/marker-icon-png/marker-icon-png-13.jpg) no-repeat;
+			background-size: contain;
+			top: 50%;
+			left: 50%;
+			z-index: 1;
+			margin-left: -10px;
+			margin-top: -34px;
+			height: 50px;
+			width: 50px;
+			cursor: pointer;
+		}
+		.container{
+			margin: 0 150px;
+		}
+	</style>
+</head>
+<body>
+	<div id="gmap"></div>
+	<div class="container">
+		<p>
+			Latitude: <span id="lat"></span> <br>
+			Longitude: <span id="lng"></span> <br>
+			Address: <span id="address"></span>
+		</p>
+	</div>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=APIKEY&callback=initMap" async defer></script>
+	<script>
+		var map, mapOptions, lat, lng, address, geocoder;
+		var no = 1;
+
+
+		function setCenter(latitude, longitude) {
+			lat = latitude;
+			lng = longitude;
+			var latlng = {lat: lat, lng: lng};
+			geocoder = new google.maps.Geocoder();
+
+			geocoder.geocode({'location': latlng}, function(results, status) {
+				if (status === 'OK') {
+					if (results[0]) {
+						address = results[0].formatted_address + '<br><br>';
+						$('#address').html(address);
+					} else {
+						$('#address').text('Not Found');
+					}
+				}
+			});
+			$('#lat').text(latitude);
+			$('#lng').text(longitude);
+		}
+
+		function initMap() {
+			
+			if(navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(position => {
+					mapOptions = {
+						zoom: 16,
+						center: new google.maps.LatLng(position.coords.latitude, position.coords.longitude),
+						mapTypeId: google.maps.MapTypeId.ROADMAP,
+						fullscreenControl: false,
+						mapTypeControl: false,
+						scaleControl: false,
+						streetViewControl: false,
+						rotateControl: false
+					};
+					map = new google.maps.Map(document.getElementById('gmap'),mapOptions);
+					$('<div/>').addClass('marker').appendTo(map.getDiv());
+					setCenter(map.getCenter().lat(), map.getCenter().lng());
+					map.addListener('dragend', function() {
+						setCenter(map.getCenter().lat(), map.getCenter().lng());
+					});
+					map.addListener("zoom_changed", function() {
+						setCenter(map.getCenter().lat(), map.getCenter().lng());
+					})
+				});
+			} else {
+				console.error("Geolocation is not supported by this browser!");
+			}
+		}
+	</script>
+</body>
+</html>
